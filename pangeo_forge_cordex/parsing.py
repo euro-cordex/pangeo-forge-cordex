@@ -23,8 +23,8 @@ base_params = {
     "format": "application/solr+json",
     # "fields": "instance_id",
     "fields": "url,size,table_id,title,instance_id,replica,data_node,frequency,time_frequency",
-    "latest": "true",
-    "distrib": "true",
+    "latest": True,
+    "distrib": True,
     "limit": 500,
 }
 
@@ -45,7 +45,7 @@ id_templates = {
 }
 
 
-def ensure_project_str(project: str) -> str:
+def ensure_project_str(project):
     """Ensure that the project string has right format
 
     This is mainly neccessary for CORDEX projects because the
@@ -59,12 +59,12 @@ def ensure_project_str(project: str) -> str:
     return project
 
 
-def project_from_iid(iid: str) -> str:
+def project_from_iid(iid):
     """Get project information from first iid entry"""
     return ensure_project_str(iid.split(".")[0])
 
 
-def facets_from_iid(iid: str, project: str = None):
+def facets_from_iid(iid, project=None):
     """Translates iid string to facet dict according to CMIP6 naming scheme"""
     if project is None:
         # take project id from first iid entry by default
@@ -78,12 +78,15 @@ def facets_from_iid(iid: str, project: str = None):
     for name, value in zip(iid_name_template.split("."), iid.split(".")):
         facets[name] = value
     if project == "CORDEX-Reklies":
-        # see comment in params module
+        # There is another problem with CORDEX-Reklies, e.g.
+        # "cordex-reklies.output.EUR-11.GERICS.MIROC-MIROC5.historical.r1i1p1.REMO2015.v1.mon.tas"
+        # The product="output" facet will give no result although the dataset_id clearly says it's "output".
+        # However the API result is empty list, so the output facet has to be removed when CORDEX-Reklies is searched, hmmm...
         del facets["product"]
     return facets
 
 
-def get_dataset_id_template(project: str, url: str = None):
+def get_dataset_id_template(project, url=None):
     """Requests the dataset_id string template for an ESGF project"""
     if url is None:
         url = "https://esgf-node.llnl.gov/esg-search/search"
@@ -97,13 +100,13 @@ def get_dataset_id_template(project: str, url: str = None):
     return r.json()["response"]["docs"][0]["dataset_id_template_"][0]
 
 
-def facets_from_template(template: str):
+def facets_from_template(template):
     """Parse the (dataset_id) string template into a list of (facet) keys"""
     regex = r"\((.*?)\)"
     return re.findall(regex, template)
 
 
-def request_project_facets(project: str, url: str = None):
+def request_project_facets(project, url=None):
     template = get_dataset_id_template(project, url)
     return facets_from_template(template)
 
@@ -122,12 +125,19 @@ def instance_ids_from_request(json_dict):
     return uniqe_iids
 
 
-def parse_instance_ids(iid: str, url: str = None, project: str = None) -> list[str]:
-    """Parse an instance id with wildcards"""
+def parse_instance_ids(iid, url=None, project=None, **params):
+    """Parse an instance id with wildcards
+
+    Examples:
+    'cordex-adjust.*.EUR-11.*.MPI-M-MPI-ESM-LR.rcp45.*.*.*.mon.tasAdjust'
+    'cordex.output.EUR-11.GERICS.ICHEC-EC-EARTH.*.*.REMO2015.*.mon.tas'
+
+
+    """
     # TODO: I should make the node url a keyword argument. For now this works well enough
     if url is None:
-        url = "https://esgf-node.llnl.gov/esg-search/search"
-        # url = "https://esgf-data.dkrz.de/esg-search/search"
+        # url = "https://esgf-node.llnl.gov/esg-search/search"
+        url = "https://esgf-data.dkrz.de/esg-search/search"
     if project is None:
         # take project id from first iid entry by default
         project = ensure_project_str(iid.split(".")[0])
@@ -144,9 +154,10 @@ def parse_instance_ids(iid: str, url: str = None, project: str = None) -> list[s
             )
         facets[k] = v
     facets_filtered = {k: v for k, v in facets.items() if v != "*" and k != "project"}
+    params = facets_filtered | params
     # print(facets_filtered)
     # TODO: how do I iterate over this more efficiently? Maybe we do not want to allow more than x files parsed?
-    resp = request_from_facets(url, project, **facets_filtered)
+    resp = request_from_facets(url, project, **params)
     if resp.status_code != 200:
         print(f"Request [{resp.url}] failed with {resp.status_code}")
         return resp

@@ -72,7 +72,7 @@ def combine_response(dset_info, files_by_id):
     for dset_id in dset_info.keys():
         files_id = [file_id for file_id in file_ids if dset_id in file_id]
         if len(files_id) != 1:
-            print("responses not for dataset and files not consistent!")
+            print(f"responses for dataset {dset_id} and files not consistent!")
         dset_info[dset_id]["urls"] = files_by_id[files_id[0]]
     return dset_info
 
@@ -81,4 +81,4 @@ def parse_dataset_response(response):
     dsets = response.json()["response"]["docs"]
     ndsets = len(dsets)
     print(f"Found {ndsets} dataset(s)!")
-    return {dset["master_id"]: dset for dset in dsets}
+    return {dset["instance_id"]: dset for dset in dsets}

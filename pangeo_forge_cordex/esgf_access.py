@@ -75,6 +75,7 @@ def esgf_search(
     **search,
 ):
     response = request(url, project, "Dataset", **search)
+    # return response.json()["response"]
     dset_info = parse_dataset_response(response)
     response = request(url, project, "File", **search)
     files_by_id = sort_files_by_dataset_id(response)
