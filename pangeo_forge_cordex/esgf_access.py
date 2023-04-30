@@ -63,6 +63,12 @@ def request(
     type="File",
     **search,
 ):
+    version = search.get("version", None)
+    if type == "File" and version:
+        # this does not work for File searches since version denotes here rcm_version
+        del search["version"]
+    elif version and version.startswith("v"):
+        search["version"] = version[1:]
     params = dict(project=project, type=type, format="application/solr+json", limit=500)
     params.update(search)
     return requests.get(url, params)
@@ -78,17 +84,18 @@ def esgf_search(
     # return response.json()["response"]
     dset_info = parse_dataset_response(response)
     response = request(url, project, "File", **search)
+    # return response.json()["response"]
     files_by_id = sort_files_by_dataset_id(response)
     responses = combine_response(dset_info, files_by_id)
     return responses
 
 
-def create_recipe_inputs(response, ssl=None):
+def create_recipe_inputs(responses, ssl=None):
     pattern_kwargs = {}
     if ssl:
         pattern_kwargs["fsspec_open_kwargs"] = {"ssl": ssl}
     inputs = {}
-    for k, v in response.items():
+    for k, v in responses.items():
         inputs[k] = {}
         urls = v["urls"]["netcdf"]
         recipe_kwargs = {}

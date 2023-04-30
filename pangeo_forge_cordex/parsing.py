@@ -4,10 +4,6 @@ import requests
 
 # 'cordex.output.EUR-11.DMI.ECMWF-ERAINT.evaluation.r1i1p1.HIRHAM5.v1.mon.tas'
 known_projects = [
-    "CMIP6",
-    "CMIP5",
-    "obs4MIPs",
-    "input4MIPs",
     "CORDEX",  # Usual Cordex datasets from CMIP5 downscaling
     "CORDEX-Reklies",  # This is Downscaling from Reklies project
     "CORDEX-Adjust",  # Bias adjusted output
@@ -22,7 +18,7 @@ base_params = {
     # "type": "File",
     "format": "application/solr+json",
     # "fields": "instance_id",
-    "fields": "url,size,table_id,title,instance_id,replica,data_node,frequency,time_frequency",
+    "fields": "url,size,table_id,title,instance_id,replica,data_node,frequency,time_frequency,version",
     "latest": True,
     "distrib": True,
     "limit": 500,
@@ -65,7 +61,7 @@ def project_from_iid(iid):
 
 
 def facets_from_iid(iid, project=None):
-    """Translates iid string to facet dict according to CMIP6 naming scheme"""
+    """Translates iid string to facet dict according to project naming scheme"""
     if project is None:
         # take project id from first iid entry by default
         project = project_from_iid(iid)
@@ -76,7 +72,8 @@ def facets_from_iid(iid, project=None):
     # facet_names = facets_from_template(template)
     facets = {}
     for name, value in zip(iid_name_template.split("."), iid.split(".")):
-        facets[name] = value
+        if value != "*":
+            facets[name] = value
     if project == "CORDEX-Reklies":
         # There is another problem with CORDEX-Reklies, e.g.
         # "cordex-reklies.output.EUR-11.GERICS.MIROC-MIROC5.historical.r1i1p1.REMO2015.v1.mon.tas"
@@ -157,8 +154,7 @@ def parse_instance_ids(iid, url=None, project=None, **params):
         facets[k] = v
     facets_filtered = {k: v for k, v in facets.items() if v != "*" and k != "project"}
     params = facets_filtered | params
-    # print(facets_filtered)
-    # TODO: how do I iterate over this more efficiently? Maybe we do not want to allow more than x files parsed?
+
     resp = request_from_facets(url, project, **params)
     if resp.status_code != 200:
         print(f"Request [{resp.url}] failed with {resp.status_code}")
