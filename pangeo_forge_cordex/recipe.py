@@ -22,6 +22,14 @@ def time_chunksize(ntime, size):
 
 
 def target_chunks(dset, url=None, ssl=None):
+    """Estimate chunksize for time
+
+    Estimate time chunksize from the size of the
+    first timestep in the dataset and the total number
+    of timesteps defined by the frequency, datetime_start
+    and datetime_stop.
+
+    """
     ntime = number_of_timesteps(dset)
     var = dset["variable"][0]
     print(url)
