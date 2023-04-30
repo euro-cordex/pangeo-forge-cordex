@@ -53,7 +53,7 @@ jobs:
           conda list
       - name: Import pangeo_forge_cordex
         run: |
-          python -c "import pange_forge_cordex"
+          python -c "import pangeo_forge_cordex"
       - name: Run tests
         env:
           ESGF_USER: ${{ secrets.ESGF_USER }}
