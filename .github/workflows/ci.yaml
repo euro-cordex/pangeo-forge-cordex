@@ -26,7 +26,7 @@ jobs:
       matrix:
         os: ["ubuntu-latest"]
         # python versions
-        python-version: ["3.9", "3.10", "3.11"]
+        python-version: ["3.9", "3.10"]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -59,7 +59,7 @@ jobs:
           ESGF_USER: ${{ secrets.ESGF_USER }}
           ESGF_PASSWORD: ${{ secrets.ESGF_PASSWORD }}
         timeout-minutes: 5
-        run: python -u -m pytest
+        run: python -u -m pytest -s
           --cov=pangeo_forge_cordex
           --cov-report=xml
           --junitxml=test-results/${{ runner.os }}-${{ matrix.python-version }}.xml

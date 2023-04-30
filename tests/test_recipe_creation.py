@@ -1,3 +1,4 @@
+import xarray as xr
 from pangeo_forge_recipes.patterns import pattern_from_file_sequence
 from pangeo_forge_recipes.recipes import XarrayZarrRecipe
 
@@ -18,4 +19,11 @@ def test_recipe_inputs():
     recipe = XarrayZarrRecipe(
         pattern, xarray_concat_kwargs={"join": "exact"}, **recipe_kwargs
     )
-    assert recipe
+
+    recipe_pruned = recipe.copy_pruned()
+    run_function = recipe_pruned.to_function()
+
+    run_function()
+
+    ds = xr.open_zarr(recipe.target_mapper, consolidated=True)
+    print(ds)
