@@ -129,8 +129,10 @@ def parse_instance_ids(iid, url=None, project=None, **params):
     """Parse an instance id with wildcards
 
     Examples:
-    'cordex-adjust.*.EUR-11.*.MPI-M-MPI-ESM-LR.rcp45.*.*.*.mon.tasAdjust'
     'cordex.output.EUR-11.GERICS.ICHEC-EC-EARTH.*.*.REMO2015.*.mon.tas'
+    'cordex-reklies.output.EUR-11.GERICS.*.historical.r1i1p1.REMO2015.v1.*.tas'
+    'cordex-adjust.*.EUR-11.*.MPI-M-MPI-ESM-LR.rcp45.*.*.*.mon.tasAdjust'
+    'cordex-esd.*.EUR-11.*.MPI-M-MPI-ESM-LR.historical.*.*.*.*.tas'
 
 
     """
