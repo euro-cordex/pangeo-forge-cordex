@@ -1,7 +1,3 @@
-import fsspec
-import pandas as pd
-import xarray as xr
-
 freq_map = {"mon": "M", "day": "D", "6hr": "6H", "3hr": "3H", "1hr": "1H"}
 
 
@@ -34,36 +30,6 @@ def sort_files_by_dataset_id(response):
                 result[id][url_type] = [url]
         # result[id].update(urls)
     return result
-
-
-def number_of_timesteps(dset):
-    start = dset["datetime_start"]
-    stop = dset["datetime_stop"]
-    cf_freq = dset["time_frequency"][0]
-    ntime = pd.date_range(start, stop, freq=freq_map[cf_freq]).size
-    print(f"Found {ntime} timesteps!")
-    return ntime
-
-
-def time_chunksize(ntime, size):
-    chunksize_optimal = 100e6
-    return max(int(ntime * chunksize_optimal / size), 1)
-
-
-def target_chunks(dset, url=None, ssl=None):
-    ntime = number_of_timesteps(dset)
-    var = dset["variable"][0]
-    print(url)
-    if url:
-        fs = fsspec.filesystem("https")
-        with xr.open_dataset(fs.open(url, ssl=ssl)) as ds:
-            size = ds[var].isel(time=0).nbytes * ntime
-            # size = ds.nbytes / ds.time.size * ntime
-            print(f"Estimated size: {size/1.e6} MB")
-    else:
-        size = dset["size"]
-    # print(f"Estimated size: {size/1.e6} MB")
-    return {"time": time_chunksize(ntime, size)}
 
 
 def combine_response(dset_info, files_by_id):

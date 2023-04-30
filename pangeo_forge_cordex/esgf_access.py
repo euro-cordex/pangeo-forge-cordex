@@ -6,14 +6,7 @@ from pangeo_forge_recipes.patterns import pattern_from_file_sequence
 from pangeo_forge_recipes.recipes import XarrayZarrRecipe
 from pyesgf.logon import LogonManager
 
-from .utils import (
-    combine_response,
-    parse_dataset_response,
-    sort_files_by_dataset_id,
-    target_chunks,
-)
-
-freq_map = {"mon": "M", "day": "D", "6hr": "6H", "3hr": "3H", "1hr": "1H"}
+from .utils import combine_response, parse_dataset_response, sort_files_by_dataset_id
 
 
 def logon():
@@ -88,20 +81,3 @@ def esgf_search(
     files_by_id = sort_files_by_dataset_id(response)
     responses = combine_response(dset_info, files_by_id)
     return responses
-
-
-def create_recipe_inputs(responses, ssl=None):
-    pattern_kwargs = {}
-    if ssl:
-        pattern_kwargs["fsspec_open_kwargs"] = {"ssl": ssl}
-    inputs = {}
-    for k, v in responses.items():
-        inputs[k] = {}
-        urls = v["urls"]["netcdf"]
-        recipe_kwargs = {}
-
-        recipe_kwargs["target_chunks"] = target_chunks(v, urls[0], ssl)
-        inputs[k]["urls"] = urls
-        inputs[k]["recipe_kwargs"] = recipe_kwargs
-        inputs[k]["pattern_kwargs"] = pattern_kwargs
-    return inputs
