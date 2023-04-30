@@ -55,6 +55,9 @@ jobs:
         run: |
           python -c "import pange_forge_cordex"
       - name: Run tests
+        env:
+          ESGF_USER: ${{ secrets.ESGF_USER }}
+          ESGF_PASSWORD: ${{ secrets.ESGF_PASSWORD }}
         timeout-minutes: 5
         run: python -u -m pytest
           --cov=pangeo_forge_cordex
