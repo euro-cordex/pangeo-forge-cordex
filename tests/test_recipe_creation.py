@@ -6,7 +6,7 @@ from pangeo_forge_cordex import logon, recipe_inputs_from_iids
 
 
 def test_recipe_inputs():
-    iid = "cordex.output.EUR-11.GERICS.ECMWF-ERAINT.evaluation.r1i1p1.REMO2015.v1.day.mon.v20180813"
+    iid = "cordex.output.EUR-11.GERICS.ECMWF-ERAINT.evaluation.r1i1p1.REMO2015.v1.mon.tas.v20180813"
     sslcontext = logon()
 
     recipe_inputs = recipe_inputs_from_iids(iid, sslcontext)
