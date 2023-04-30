@@ -1,2 +1,5 @@
 # pangeo-forge-cordex
-pangeo force recipe creation for CORDEX datasets.
+
+[![PyPI version](https://badge.fury.io/py/pangeo-forge-cordex.svg)](https://badge.fury.io/py/pangeo-forge-cordex)
+
+Pangeo force recipe creation for CORDEX datasets.
