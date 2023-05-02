@@ -71,3 +71,18 @@ def recipe_inputs_from_iids(iids, ssl=None):
         dset_responses.update(esgf_search(**facets))
 
     return create_recipe_inputs(dset_responses, ssl)
+
+
+def create_recipe(urls, recipe_kwargs=None, pattern_kwargs=None):
+    from pangeo_forge_recipes.patterns import pattern_from_file_sequence
+    from pangeo_forge_recipes.recipes import XarrayZarrRecipe
+    
+    if recipe_kwargs is None:
+        recipe_kwargs = {}
+    if pattern_kwargs is None:
+        pattern_kwargs = {}
+    pattern = pattern_from_file_sequence(urls, "time", **pattern_kwargs)
+    if urls is not None:
+        return XarrayZarrRecipe(
+            pattern, xarray_concat_kwargs={"join": "exact"}, **recipe_kwargs
+        )

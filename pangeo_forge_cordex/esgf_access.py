@@ -2,14 +2,13 @@ import os
 import ssl
 
 import requests
-from pangeo_forge_recipes.patterns import pattern_from_file_sequence
-from pangeo_forge_recipes.recipes import XarrayZarrRecipe
-from pyesgf.logon import LogonManager
 
 from .utils import combine_response, parse_dataset_response, sort_files_by_dataset_id
 
 
 def logon():
+    from pyesgf.logon import LogonManager
+    
     lm = LogonManager(verify=True)
     if not lm.is_logged_on():
         myproxy_host = "esgf-data.dkrz.de"
@@ -36,18 +35,6 @@ def logon():
     sslcontext.load_verify_locations(capath=lm.esgf_certs_dir)
     sslcontext.load_cert_chain(lm.esgf_credentials)
     return sslcontext
-
-
-def create_recipe(urls, recipe_kwargs=None, pattern_kwargs=None):
-    if recipe_kwargs is None:
-        recipe_kwargs = {}
-    if pattern_kwargs is None:
-        pattern_kwargs = {}
-    pattern = pattern_from_file_sequence(urls, "time", **pattern_kwargs)
-    if urls is not None:
-        return XarrayZarrRecipe(
-            pattern, xarray_concat_kwargs={"join": "exact"}, **recipe_kwargs
-        )
 
 
 def request(
