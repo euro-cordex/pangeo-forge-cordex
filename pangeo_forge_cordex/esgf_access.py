@@ -8,7 +8,7 @@ from .utils import combine_response, parse_dataset_response, sort_files_by_datas
 
 def logon():
     from pyesgf.logon import LogonManager
-    
+
     lm = LogonManager(verify=True)
     if not lm.is_logged_on():
         myproxy_host = "esgf-data.dkrz.de"
