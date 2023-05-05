@@ -18,7 +18,7 @@ base_params = {
     # "type": "File",
     "format": "application/solr+json",
     # "fields": "instance_id",
-    "fields": "url,size,table_id,title,instance_id,replica,data_node,frequency,time_frequency,version",
+    "fields": "url,size,table_id,title,instance_id,replica,data_node,frequency,time_frequency,version,size,datetime_start,datetime_stop",
     "latest": True,
     "distrib": True,
     "limit": 500,
@@ -108,11 +108,11 @@ def request_project_facets(project, url=None):
     return facets_from_template(template)
 
 
-def request_from_facets(url, project, **facets):
+def request_from_facets(url, project, type="Dataset", **facets):
     params = request_params[project].copy()
     params.update(facets)
     params["project"] = project
-    params["type"] = "Dataset"
+    params["type"] = type
     return requests.get(url=url, params=params)
 
 
@@ -122,24 +122,7 @@ def instance_ids_from_request(json_dict):
     return uniqe_iids
 
 
-def parse_instance_ids(iid, url=None, project=None, **params):
-    """Parse an instance id with wildcards
-
-    Examples:
-    'cordex.output.EUR-11.GERICS.ICHEC-EC-EARTH.*.*.REMO2015.*.mon.tas'
-    'cordex-reklies.output.EUR-11.GERICS.*.historical.r1i1p1.REMO2015.v1.*.tas'
-    'cordex-adjust.*.EUR-11.*.MPI-M-MPI-ESM-LR.rcp45.*.*.*.mon.tasAdjust'
-    'cordex-esd.*.EUR-11.*.MPI-M-MPI-ESM-LR.historical.*.*.*.*.tas'
-
-
-    """
-    # TODO: I should make the node url a keyword argument. For now this works well enough
-    if url is None:
-        # url = "https://esgf-node.llnl.gov/esg-search/search"
-        url = "https://esgf-data.dkrz.de/esg-search/search"
-    if project is None:
-        # take project id from first iid entry by default
-        project = ensure_project_str(iid.split(".")[0])
+def parse_facets(iid, project):
     facets = facets_from_iid(iid, project)
     # convert string to list if square brackets are found
     for k, v in facets.items():
@@ -152,13 +135,51 @@ def parse_instance_ids(iid, url=None, project=None, **params):
                 .split(",")
             )
         facets[k] = v
-    facets_filtered = {k: v for k, v in facets.items() if v != "*" and k != "project"}
+    return {k: v for k, v in facets.items() if v != "*" and k != "project"}
+
+
+def request_instance_ids(iid, url=None, project=None, type="Dataset", **params):
+    """Parse an instance id with wildcards
+
+    Examples:
+    'cordex.output.EUR-11.GERICS.ICHEC-EC-EARTH.*.*.REMO2015.*.mon.tas'
+    'cordex-reklies.output.EUR-11.GERICS.*.historical.r1i1p1.REMO2015.v1.*.tas'
+    'cordex-adjust.*.EUR-11.*.MPI-M-MPI-ESM-LR.rcp45.*.*.*.mon.tasAdjust'
+    'cordex-esd.*.EUR-11.*.MPI-M-MPI-ESM-LR.historical.*.*.*.*.tas'
+
+    """
+    if url is None:
+        url = "https://esgf-data.dkrz.de/esg-search/search"
+    if project is None:
+        # take project id from first iid entry by default
+        project = ensure_project_str(iid.split(".")[0])
+
+    facets_filtered = parse_facets(iid, project)
     params = facets_filtered | params
 
-    resp = request_from_facets(url, project, **params)
+    resp = request_from_facets(url, project, type, **params)
     if resp.status_code != 200:
         print(f"Request [{resp.url}] failed with {resp.status_code}")
         return resp
     else:
-        json_dict = resp.json()
-        return instance_ids_from_request(json_dict)
+        return resp.json()
+
+
+def parse_instance_ids(iid, url=None, project=None, **params):
+    """Parse an instance id with wildcards
+
+    Examples:
+    'cordex.output.EUR-11.GERICS.ICHEC-EC-EARTH.*.*.REMO2015.*.mon.tas'
+    'cordex-reklies.output.EUR-11.GERICS.*.historical.r1i1p1.REMO2015.v1.*.tas'
+    'cordex-adjust.*.EUR-11.*.MPI-M-MPI-ESM-LR.rcp45.*.*.*.mon.tasAdjust'
+    'cordex-esd.*.EUR-11.*.MPI-M-MPI-ESM-LR.historical.*.*.*.*.tas'
+
+    """
+    resp = request_instance_ids(iid, url, project, **params)
+
+    return instance_ids_from_request(resp)
+
+
+def total_size_ids(iid, url=None, project=None, **params):
+    resp = request_instance_ids(iid, url, project, **params)
+    return sum([r["size"] for r in resp["response"]["docs"]])
