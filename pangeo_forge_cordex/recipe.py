@@ -1,6 +1,4 @@
-import fsspec
-import pandas as pd
-import xarray as xr
+
 
 from .esgf_access import esgf_search
 from .parsing import facets_from_iid
@@ -8,6 +6,8 @@ from .utils import freq_map
 
 
 def number_of_timesteps(dset):
+    import pandas as pd
+    
     start = dset["datetime_start"]
     stop = dset["datetime_stop"]
     cf_freq = dset["time_frequency"][0]
@@ -30,6 +30,9 @@ def target_chunks(dset, url=None, ssl=None):
     and datetime_stop.
 
     """
+    import xarray as xr
+    import fsspec
+    
     ntime = number_of_timesteps(dset)
     var = dset["variable"][0]
     print(url)
