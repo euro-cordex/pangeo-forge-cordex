@@ -44,16 +44,17 @@ def path(iid, project=None):
     return op.join(*[attrs[k] for k in facets])
 
 
-def catalog_entry(iids, df=None):
+def get_url(iid, bucket, prefix="", fs="s3"):
+    return f"{fs}://{op.join(bucket, prefix, path(iid))}"
+
+
+def catalog_entry(iid, url, df=None):
     import pandas as pd
 
-    if isinstance(iids, str):
-        iids = [iids]
-    attrs = {}
-    for i, iid in enumerate(iids):
-        attrs[i] = facets_from_iid(iid)
+    attrs = facets_from_iid(iid)
+    attrs["path"] = url
 
-    rows = pd.DataFrame.from_dict(attrs, orient="index")
+    rows = pd.DataFrame(attrs, index=[0])
     if df is not None:
         cat = pd.concat([df, rows], ignore_index=True)
         if cat.duplicated().any():
