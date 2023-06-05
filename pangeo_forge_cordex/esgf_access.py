@@ -6,16 +6,17 @@ import requests
 from .utils import combine_response, parse_dataset_response, sort_files_by_dataset_id
 
 
-def logon():
+def logon(host=None):
     from pyesgf.logon import LogonManager
 
+    if host is None:
+        host = "esgf-data.dkrz.de"
     lm = LogonManager(verify=True)
     if not lm.is_logged_on():
-        myproxy_host = "esgf-data.dkrz.de"
         # if we find those in environment, use them.
         if "ESGF_USER" in os.environ and "ESGF_PASSWORD" in os.environ:
             lm.logon(
-                hostname=myproxy_host,
+                hostname=host,
                 username=os.environ["ESGF_USER"],
                 password=os.environ["ESGF_PASSWORD"],
                 interactive=False,
@@ -23,7 +24,7 @@ def logon():
             )
         else:
             lm.logon(
-                hostname=myproxy_host,
+                hostname=host,
                 interactive=True,
                 bootstrap=True,
             )
