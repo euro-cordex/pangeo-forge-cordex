@@ -2,6 +2,8 @@ from os import path as op
 
 from .parsing import project_from_iid
 
+# the facet names in the intake catalogs differ from those in the ESGF API
+# since the intake facets represent actual datasets attributes.
 cordex_cmip5_facets = [
     "project_id",
     "product",
@@ -17,11 +19,26 @@ cordex_cmip5_facets = [
     "version",
 ]
 
+cordex_adjust_facets = [
+    "project_id",
+    "product",
+    "CORDEX_domain",
+    "institute_id",
+    "driving_model_id",
+    "experiment_id",
+    "member",
+    "model_id",
+    "bias_adjustment",
+    "frequency",
+    "variable_id",
+    "version",
+]
+
 catalog_facets = {
     "CORDEX": cordex_cmip5_facets,
     "CORDEX-Reklies": cordex_cmip5_facets,
-    "CORDEX-Adjust": None,
-    "CORDEX-ESD": None,
+    "CORDEX-Adjust": cordex_adjust_facets,
+    "CORDEX-ESD": cordex_cmip5_facets,
 }
 
 
@@ -37,6 +54,7 @@ def facets_from_iid(iid, facets=None):
 def path(iid, project=None):
     if project is None:
         project = project_from_iid(iid)
+        print(project)
         facets = catalog_facets[project]
     else:
         facets = None
