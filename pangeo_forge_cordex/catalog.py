@@ -54,7 +54,6 @@ def facets_from_iid(iid, facets=None):
 def path(iid, project=None):
     if project is None:
         project = project_from_iid(iid)
-        print(project)
         facets = catalog_facets[project]
     else:
         facets = None
