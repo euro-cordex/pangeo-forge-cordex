@@ -8,6 +8,7 @@ known_projects = [
     "CORDEX-Reklies",  # This is Downscaling from Reklies project
     "CORDEX-Adjust",  # Bias adjusted output
     "CORDEX-ESD",  # Statistical downscaling
+    "CORDEX-FPSCONV",  # FPS convection
 ]
 
 
@@ -66,7 +67,7 @@ def facets_from_iid(iid, project=None):
         # take project id from first iid entry by default
         project = project_from_iid(iid)
     iid = f"{project}." + ".".join(iid.split(".")[1:])
-    iid_name_template = id_templates[project]
+    iid_name_template = id_templates.get(project, cordex_template)
     # this does not work yet with CORDEX project
     # template = get_dataset_id_template(project)
     # facet_names = facets_from_template(template)
@@ -109,7 +110,7 @@ def request_project_facets(project, url=None):
 
 
 def request_from_facets(url, project, type="Dataset", **facets):
-    params = request_params[project].copy()
+    params = request_params.get(project, cordex_params).copy()
     params.update(facets)
     params["project"] = project
     params["type"] = type
