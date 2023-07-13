@@ -5,6 +5,8 @@ import requests
 
 from .utils import combine_response, parse_dataset_response, sort_files_by_dataset_id
 
+host = "https://esgf-data.dkrz.de/esg-search/search"
+
 
 def logon(host=None):
     from pyesgf.logon import LogonManager
@@ -39,11 +41,13 @@ def logon(host=None):
 
 
 def request(
-    url="https://esgf-node.llnl.gov/esg-search/search",
+    url=None,
     project="CORDEX",
     type="File",
     **search,
 ):
+    if url is None:
+        url = host
     version = search.get("version", None)
     if type == "File" and version:
         # this does not work for File searches since version denotes here rcm_version
