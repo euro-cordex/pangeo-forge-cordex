@@ -19,7 +19,14 @@ def time_chunksize(ntime, size):
     return max(int(ntime * chunksize_optimal / size), 1)
 
 
-def target_chunks(dset, url=None, ssl=None):
+def estimate_timestep_size(url, var):
+    import xarray as xr
+
+    with xr.open_dataset(url) as ds:
+        return ds[var].isel(time=0).nbytes
+
+
+def estimate_time_chunks(dset, urls=None, ssl=None):
     """Estimate chunksize for time
 
     Estimate time chunksize from the size of the
@@ -29,21 +36,37 @@ def target_chunks(dset, url=None, ssl=None):
 
     """
     import fsspec
-    import xarray as xr
 
     ntime = number_of_timesteps(dset)
     var = dset["variable"][0]
-    print(url)
-    if url:
+
+    # first try openda
+    try:
+        print("trying opendap...")
+        url = urls["opendap"][0]
+        size = estimate_timestep_size(url, var) * ntime
+        print(f"Estimated size from opendap: {size/1.e6} MB")
+        return {"time": time_chunksize(ntime, size)}
+    except Exception as e:
+        print(f"opendap access failed: {e}")
+    try:
+        print("trying https...")
+        url = urls["netcdf"][0]
         fs = fsspec.filesystem("https")
-        with xr.open_dataset(fs.open(url, ssl=ssl)) as ds:
-            size = ds[var].isel(time=0).nbytes * ntime
-            # size = ds.nbytes / ds.time.size * ntime
-            print(f"Estimated size: {size/1.e6} MB")
-    else:
-        size = dset["size"]
-    # print(f"Estimated size: {size/1.e6} MB")
-    return {"time": time_chunksize(ntime, size)}
+        file = fs.open(url, ssl=ssl)
+        size = estimate_timestep_size(file, var) * ntime
+        print(f"Estimated size from https: {size/1.e6} MB")
+        return {"time": time_chunksize(ntime, size)}
+    except Exception as e:
+        print(f"https access failed: {e}")
+        size = dset["size"] * 10 * ntime
+        print(f"Estimated size roughly: {size/1.e6} MB")
+        return {"time": time_chunksize(ntime, size)}
+
+
+def get_chunksizes(dset, ssl):
+    chunks = estimate_time_chunks(dset, dset["urls"], ssl)
+    return chunks
 
 
 def create_recipe_inputs(responses, ssl=None):
@@ -54,11 +77,9 @@ def create_recipe_inputs(responses, ssl=None):
     for k, v in responses.items():
         print(f"creating recipe inputs for {k}")
         inputs[k] = {}
-        urls = v["urls"]["netcdf"]
         recipe_kwargs = {}
-
-        recipe_kwargs["target_chunks"] = target_chunks(v, urls[0], ssl)
-        inputs[k]["urls"] = urls
+        recipe_kwargs["target_chunks"] = get_chunksizes(v, ssl)
+        inputs[k]["urls"] = v["urls"]["netcdf"]
         inputs[k]["recipe_kwargs"] = recipe_kwargs
         inputs[k]["pattern_kwargs"] = pattern_kwargs
     return inputs
@@ -69,7 +90,6 @@ def recipe_inputs_from_iids(iids, ssl=None):
         iids = [iids]
     dset_responses = {}
     for iid in iids:
-        print(iid)
         facets = facets_from_iid(iid)
         dset_responses.update(esgf_search(**facets))
 

@@ -14,21 +14,19 @@ def parse_urls(response):
 
 
 def sort_files_by_dataset_id(response):
+    """sort File response urls by dataset_id"""
     files = response.json()["response"]["docs"]
-    # return files
-    # result = dict.fromkeys([f['dataset_id'] for f in files], {})
     result = {f["dataset_id"]: {} for f in files}
+
     for f in files:
         id = f["dataset_id"]
-        # print(f["size"])
-        # result[id]["size"] += f["size"]
         urls = parse_urls(f["url"])
         for url_type, url in urls.items():
             if url_type in result[id].keys():
                 result[id][url_type].append(url)
             else:
                 result[id][url_type] = [url]
-        # result[id].update(urls)
+
     return result
 
 
