@@ -52,6 +52,7 @@ def create_recipe_inputs(responses, ssl=None):
         pattern_kwargs["fsspec_open_kwargs"] = {"ssl": ssl}
     inputs = {}
     for k, v in responses.items():
+        print(f"creating recipe inputs for {k}")
         inputs[k] = {}
         urls = v["urls"]["netcdf"]
         recipe_kwargs = {}
@@ -68,6 +69,7 @@ def recipe_inputs_from_iids(iids, ssl=None):
         iids = [iids]
     dset_responses = {}
     for iid in iids:
+        print(iid)
         facets = facets_from_iid(iid)
         dset_responses.update(esgf_search(**facets))
 
