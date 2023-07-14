@@ -46,7 +46,7 @@ def facets_from_iid(iid, facets=None):
     """get catalog attributes from iid"""
     if facets is None:
         project = project_from_iid(iid)
-        facets = catalog_facets[project]
+        facets = catalog_facets.get(project, cordex_cmip5_facets)
     attrs = iid.split(".")
     return dict(zip(facets, attrs))
 
@@ -54,7 +54,7 @@ def facets_from_iid(iid, facets=None):
 def path(iid, project=None):
     if project is None:
         project = project_from_iid(iid)
-        facets = catalog_facets[project]
+        facets = catalog_facets.get(project, cordex_cmip5_facets)
     else:
         facets = None
     attrs = facets_from_iid(iid, facets)
